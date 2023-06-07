@@ -25,12 +25,14 @@ public class BatchProcessDeserializerV1 extends StdDeserializer<BatchProcess> {
 
         JsonNode batchProcessId = processNode.remove("batchProcessId");
         JsonNode processId = processNode.remove("processId");
+        JsonNode processOrder = processNode.remove("processOrder");
         JsonNode processParams = processNode.deepCopy();
 
-        BatchProcess process = new BatchProcess();
+        BatchProcess process = new BatchProcess();/*
         process.setBatchProcessId(batchProcessId == null ? null : batchProcessId.asLong());
         process.setProcessId(processId.asText());
-        process.setParameters(Base64.getEncoder().encodeToString(processParams.toString().getBytes()));
+        process.setProcessOrder(processOrder == null ? null : processOrder.asInt());
+        process.setParameters(Base64.getEncoder().encodeToString(processParams.toString().getBytes()));*/
 
         return process;
     }

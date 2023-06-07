@@ -8,22 +8,21 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import javax.persistence.OrderBy;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 
 @Entity
@@ -32,50 +31,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "batchId")
-public class Batch implements Serializable {
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "batchExecutionOrderId")
+public class BatchExecutionOrder implements Serializable {
     @Id
-    private String batchId;
-
-    private String buyerName;
-
-    private String liquorRatio;
-
-    private String styleId;
-
-    private String orderId;
-
-    private String pantone;
-
-    private String labId;
-
-    private double fabricsQuantity;
-
-    private long totalRoll;
-
-    private String challanNumber;
-
-    private String fabricType;
-
-    private String requiredGsm;
-
-    private String bycybl;
-
-    private String bodySLength;
-
-    private String rycybl;
-
-    private String ribSLength;
-
-    private Boolean published = false;
-
-    private Boolean finished = false;
-
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    @UpdateTimestamp
-    private LocalDateTime updatedOn;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long batchExecutionOrderId;
 
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
@@ -83,10 +43,13 @@ public class Batch implements Serializable {
     @CreationTimestamp
     private LocalDateTime createdOn;
 
-    @OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("process_order")
-    private List<BatchProcess> batchProcesses;
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @UpdateTimestamp
+    private LocalDateTime updatedOn;
 
-    @OneToOne(mappedBy = "batch", cascade = CascadeType.ALL, orphanRemoval = true)
-    BatchExecutionOrder batchExecutionOrder;
+    @OneToOne
+    @JoinColumn(name = "batch_id")
+    Batch batch;
 }

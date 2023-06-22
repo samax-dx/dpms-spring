@@ -61,11 +61,11 @@ public class Batch implements Serializable {
 
     private String bycybl;
 
-    private String bodySLength;
+    private String bodySxLength;
 
     private String rycybl;
 
-    private String ribSLength;
+    private String ribSxLength;
 
     private Boolean published = false;
 

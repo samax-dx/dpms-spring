@@ -9,12 +9,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
+import javax.persistence.Transient;
 import java.io.Serializable;
+import java.util.Optional;
 
 
 @Entity
@@ -33,7 +39,18 @@ public class BatchProcessParameter implements Serializable {
 
     private String value;
 
-    @ManyToOne
+    @JsonIgnoreProperties({"parameters"})
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "batch_process_id")
     private BatchProcess batchProcess;
+
+    @Transient
+    private Long batchProcessId;
+
+    @PostPersist
+    @PostUpdate
+    @PostLoad
+    public void updateReferenceIds() {
+        batchProcessId = Optional.ofNullable(batchProcess).map(BatchProcess::getBatchProcessId).orElse(null);
+    }
 }

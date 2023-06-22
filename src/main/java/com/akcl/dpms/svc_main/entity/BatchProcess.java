@@ -1,17 +1,21 @@
 package com.akcl.dpms.svc_main.entity;
 
+import com.akcl.dpms.util.AttributeCoder;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -25,6 +29,7 @@ import javax.persistence.PostPersist;
 import javax.persistence.PostUpdate;
 import javax.persistence.Transient;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,12 +57,15 @@ public class BatchProcess implements Serializable {
 
     @JsonIgnore
     @OneToMany(mappedBy = "batchProcess", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BatchProcessParameter> parameters;
+    private List<BatchProcessParameter> parameters = new ArrayList<>();
 
     @JsonIgnoreProperties({"batchProcesses"})
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "batch_id")
     private Batch batch;
+
+    @Column(name = "batch_id", insertable = false, updatable = false)
+    String batchIdMapped;
 
     @Transient
     private String batchId;
@@ -70,17 +78,29 @@ public class BatchProcess implements Serializable {
     @Transient
     private Long machineId;
 
-    @Transient
-    @JsonIgnore
-    @JsonAnySetter
-    @JsonAnyGetter
-    private Map<String, Object> extraProps = new HashMap<>();
-
     @PostPersist
     @PostUpdate
     @PostLoad
     public void updateReferenceIds() {
         batchId = Optional.ofNullable(batch).map(Batch::getBatchId).orElse(null);
         machineId = Optional.ofNullable(machine).map(Machine::getMachineId).orElse(null);
+    }
+
+    @Transient
+    @JsonIgnore
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private AttributeCoder<BatchProcessParameter> attributeCoder = new AttributeCoder<BatchProcessParameter>("name", "value", "name", "batchProcessParameterId") {};
+
+    @JsonAnyGetter
+    public Map<String, Object> produceExtraProps() {
+        Map<String, Object> extraProps = new HashMap<>();
+        parameters.forEach(parameter -> attributeCoder.insertAttribute(parameter, extraProps));
+        return extraProps;
+    }
+
+    @JsonAnySetter
+    public void consumeExtraProp(String key, Object value) {
+        attributeCoder.insertAttribute(key, value, parameters);
     }
 }

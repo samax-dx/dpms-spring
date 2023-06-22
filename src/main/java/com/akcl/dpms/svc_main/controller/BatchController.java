@@ -3,12 +3,12 @@ package com.akcl.dpms.svc_main.controller;
 import com.akcl.dpms.svc_main.entity.Batch;
 import com.akcl.dpms.svc_main.entity.BatchExecutionOrder;
 import com.akcl.dpms.svc_main.entity.BatchProcess;
-import com.akcl.dpms.svc_main.entity.BatchProcessParameter;
+import com.akcl.dpms.svc_main.entity.BatchView;
 import com.akcl.dpms.svc_main.repository.BatchExecutionOrderRepository;
 import com.akcl.dpms.svc_main.repository.BatchProcessRepository;
 import com.akcl.dpms.svc_main.repository.BatchRepository;
+import com.akcl.dpms.svc_main.repository.BatchViewRepository;
 import com.akcl.dpms.svc_main.repository.MachineRepository;
-import com.akcl.dpms.util.EntityUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 
 @RestController
@@ -33,6 +37,7 @@ public class BatchController {
     private final BatchProcessRepository batchProcessRepository;
     private final BatchExecutionOrderRepository executionOrderRepository;
     private final MachineRepository machineRepository;
+    private final BatchViewRepository batchViewRepository;
 
     @CrossOrigin(origins = "*")
     @RequestMapping(
@@ -40,17 +45,9 @@ public class BatchController {
             method = RequestMethod.GET,
             produces = {"application/json"}
     )
-    public List<Batch> getBatches(@RequestParam MultiValueMap<String, String> filters) {
-        List<Batch> batches = batchRepository.findAllWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
-
-        for (Batch batch : batches) {
-            for (BatchProcess process : batch.getBatchProcesses()) {
-                process.setExtraProps(EntityUtil.getMapFromAttributes(process.getParameters(),
-                        BatchProcessParameter::getName, BatchProcessParameter::getValue, BatchProcessParameter::getBatchProcessParameterId, parameter -> null));
-            }
-        }
-
-        return batches;
+    public List<BatchView> getBatches(@RequestParam MultiValueMap<String, String> filters) {
+        //return batchRepository.findAllWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
+        return StreamSupport.stream(batchViewRepository.findAll().spliterator(), false).collect(Collectors.toList());
     }
 
     @CrossOrigin(origins = "*")
@@ -66,17 +63,10 @@ public class BatchController {
             batchProcess.setProcessOrder(i);
             batchProcess.setBatch(batch);
             batchProcess.setMachine(machineRepository.findById(batchProcess.getMachineId()).orElse(null));
-
-            batchProcess.setParameters(EntityUtil.getAttributesFromMap(batchProcess.getExtraProps(),
-                    attr -> new BatchProcessParameter(attr.rid, attr.key, String.valueOf(attr.value), batchProcess)));
+            batchProcess.getParameters().forEach(parameter -> parameter.setBatchProcess(batchProcess));
         }
 
-        Batch savedBatch = batchRepository.save(batch);
-        for (BatchProcess process : savedBatch.getBatchProcesses()) {
-            process.setExtraProps(EntityUtil.getMapFromAttributes(process.getParameters(),
-                    BatchProcessParameter::getName, BatchProcessParameter::getValue, BatchProcessParameter::getBatchProcessParameterId, parameter -> null));
-        }
-        return savedBatch;
+        return batchRepository.save(batch);
     }
 
     @CrossOrigin(origins = "*")
@@ -87,11 +77,7 @@ public class BatchController {
             produces = {"application/json"}
     )
     public BatchProcess saveBatchProcess(@RequestBody BatchProcess batchProcess) {
-        batchProcess.setParameters(EntityUtil.getAttributesFromMap(batchProcess.getExtraProps(),
-                attr -> new BatchProcessParameter(attr.rid, attr.key, String.valueOf(attr.value), batchProcess)));
-        batchProcessRepository.save(batchProcess);
-
-        return batchProcess;
+        return batchProcessRepository.save(batchProcess);
     }
 
     @CrossOrigin(origins = "*")

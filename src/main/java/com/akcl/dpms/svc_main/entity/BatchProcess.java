@@ -64,9 +64,6 @@ public class BatchProcess implements Serializable {
     @JoinColumn(name = "batch_id")
     private Batch batch;
 
-    @Column(name = "batch_id", insertable = false, updatable = false)
-    String batchIdMapped;
-
     @Transient
     private String batchId;
 

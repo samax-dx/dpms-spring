@@ -3,11 +3,10 @@ package com.akcl.dpms.svc_main.controller;
 import com.akcl.dpms.svc_main.entity.Batch;
 import com.akcl.dpms.svc_main.entity.BatchExecutionOrder;
 import com.akcl.dpms.svc_main.entity.BatchProcess;
-import com.akcl.dpms.svc_main.entity.BatchView;
+import com.akcl.dpms.svc_main.entity.projection_interfaces.BatchView;
 import com.akcl.dpms.svc_main.repository.BatchExecutionOrderRepository;
 import com.akcl.dpms.svc_main.repository.BatchProcessRepository;
 import com.akcl.dpms.svc_main.repository.BatchRepository;
-import com.akcl.dpms.svc_main.repository.BatchViewRepository;
 import com.akcl.dpms.svc_main.repository.MachineRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -20,13 +19,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 
 @RestController
@@ -37,7 +32,6 @@ public class BatchController {
     private final BatchProcessRepository batchProcessRepository;
     private final BatchExecutionOrderRepository executionOrderRepository;
     private final MachineRepository machineRepository;
-    private final BatchViewRepository batchViewRepository;
 
     @CrossOrigin(origins = "*")
     @RequestMapping(
@@ -47,7 +41,7 @@ public class BatchController {
     )
     public List<BatchView> getBatches(@RequestParam MultiValueMap<String, String> filters) {
         //return batchRepository.findAllWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
-        return StreamSupport.stream(batchViewRepository.findAll().spliterator(), false).collect(Collectors.toList());
+        return batchRepository.findAllViewsWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
     }
 
     @CrossOrigin(origins = "*")

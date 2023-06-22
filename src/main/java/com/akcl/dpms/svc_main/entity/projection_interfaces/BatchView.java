@@ -1,8 +1,5 @@
-package com.akcl.dpms.svc_main.entity;
+package com.akcl.dpms.svc_main.entity.projection_interfaces;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,9 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-@EntityView(Batch.class)
 public interface BatchView {
-    @IdMapping
     String getBatchId();
 
     String getBuyerName();
@@ -64,6 +59,5 @@ public interface BatchView {
 
     List<BatchProcessSubView> getBatchProcesses();
 
-//    @Mapping(fetches = "batchExecutionOrder")
-//    BatchExecutionOrder getBatchExecutionOrder();
+    BatchExecutionOrderSubView getBatchExecutionOrder();
 }

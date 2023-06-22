@@ -1,6 +1,7 @@
 package com.akcl.dpms.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.core.GenericTypeResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -69,5 +70,19 @@ public class AttributeCoder<T> {
         } else {
             dest.set(attributeIndex, attribute);
         }
+    }
+
+    public Map<String, Object> readAttributes(List<?> attributes) {
+        Map<String, Object> dest = new HashMap<>();
+
+        for (Object attribute : attributes) {
+            Map<String, Object> attributeNode = attributeMapper.convertValue(attribute, new TypeReference<Map<String, Object>>() {});
+            String attrName = String.valueOf(attributeNode.get(nameField));
+            dest.put(attrName + "", attributeNode.get(valueField));
+            dest.put(attrName + "__sid", attributeNode.get(sidField));
+            dest.put(attrName + "__rid", attributeNode.get(ridField));
+        }
+
+        return dest;
     }
 }

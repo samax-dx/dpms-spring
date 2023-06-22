@@ -1,6 +1,7 @@
 package com.akcl.dpms.svc_main.repository;
 
 import com.akcl.dpms.svc_main.entity.Batch;
+import com.akcl.dpms.svc_main.entity.projection_interfaces.BatchView;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,7 @@ public interface BatchRepository extends JpaRepository<Batch, String>, BatchRepo
 
     @Query("select b from Batch b where b.published = ?1")
     List<Batch> findAllWithPublishStatus(Boolean isPublished);
+
+    @Query("select b from Batch b where b.published = ?1")
+    List<BatchView> findAllViewsWithPublishStatus(Boolean isPublished);
 }

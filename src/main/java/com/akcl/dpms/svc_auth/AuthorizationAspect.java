@@ -3,7 +3,6 @@ package com.akcl.dpms.svc_auth;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.akcl.dpms.svc_auth.repository.LoginBaseRepository;
-import com.akcl.dpms.util.SpringWebUtil;
 import com.akcl.dpms.svc_auth.annotations.Authorize;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -13,7 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 @Aspect
@@ -21,19 +23,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthorizationAspect {
 
+    private final HttpServletRequest httpServletRequest;
+
     private final LoginBaseRepository loginBaseRepository;
 
     @Around(value = "@annotation(authorizeAnnotation)")
     public Object authorize(ProceedingJoinPoint joinPoint, Authorize authorizeAnnotation) {
         try {
-            Map<String, String> party = new ObjectMapper()
-                    .convertValue(SpringWebUtil.currentRequestAttribute("tokenData"), new TypeReference<Map<String, String>>() {});
+            Map<String, String> user = new ObjectMapper().convertValue(Optional.ofNullable(httpServletRequest.getAttribute("authData")).orElse(new HashMap<>()),
+                    new TypeReference<Map<String, String>>() {});
 
             boolean authChecks;
 
-            authChecks = party.containsKey("loginId") && (party.containsKey("password") || loginBaseRepository.findById(party.get("loginId")).orElse(null) != null);
-            authChecks &= hasPartyRoles(authorizeAnnotation.roles(), party);
-            authChecks &= belongsToPartyGroups(authorizeAnnotation.groups(), party);
+            authChecks = user.containsKey("loginId") && (user.containsKey("password") || loginBaseRepository.findById(user.get("loginId")).orElse(null) != null);
+            authChecks &= hasPartyRoles(authorizeAnnotation.roles(), user);
+            authChecks &= belongsToPartyGroups(authorizeAnnotation.groups(), user);
 
             if (authChecks) {
                 return joinPoint.proceed();

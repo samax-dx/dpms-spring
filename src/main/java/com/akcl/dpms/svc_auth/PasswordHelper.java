@@ -1,6 +1,6 @@
 package com.akcl.dpms.svc_auth;
 
-import com.akcl.dpms.svc_auth.dto.PasswordPair;
+import com.akcl.dpms.svc_auth.dto.Password;
 import lombok.RequiredArgsConstructor;
 
 import javax.crypto.Mac;
@@ -15,14 +15,14 @@ import java.nio.charset.StandardCharsets;
 public class PasswordHelper {
     private final String secret;
 
-    public PasswordPair createPasswordPair(String password, String salt) throws Exception {
+    public Password createPassword(String password, String salt) throws Exception {
         String passwordHash = hashPassword(password, salt);
-        return new PasswordPair(password, passwordHash);
+        return new Password(password, passwordHash);
     }
 
-    public void validatePasswordPair(PasswordPair passwordPair, String salt) throws Exception {
-        String passwordHash = hashPassword(passwordPair.password, salt);
-        if (!passwordHash.equals(passwordPair.passwordHash)) {
+    public void validatePassword(Password password, String salt) throws Exception {
+        String passwordHash = hashPassword(password.plainVal, salt);
+        if (!passwordHash.equals(password.hashVal)) {
             throw new Exception("validation_failed");
         }
     }

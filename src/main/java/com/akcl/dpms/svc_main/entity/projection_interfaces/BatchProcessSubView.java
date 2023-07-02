@@ -3,8 +3,6 @@ package com.akcl.dpms.svc_main.entity.projection_interfaces;
 import com.akcl.dpms.util.AttributeCoder;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +27,14 @@ public interface BatchProcessSubView {
 
     @JsonAnyGetter
     default Map<String, Object> generateExtraProps() {
-        AttributeCoder<Map<String, Object>> attributeCoder = new AttributeCoder<Map<String, Object>>("name", "value", "name", "batchProcessParameterId") {};
-        return attributeCoder.readAttributes(getParameters());
+        HashMap<String, Object> extraProps = new HashMap<>();
+
+        Long machineId = getMachine().getMachineId();
+        extraProps.put("machineId", machineId);
+
+        AttributeCoder<?> customAttributeCoder = new AttributeCoder<Object>("name", "value", "name", "batchProcessParameterId") {};
+        extraProps.putAll(customAttributeCoder.readAttributes(getParameters()));
+
+        return extraProps;
     }
 }

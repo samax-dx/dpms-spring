@@ -13,8 +13,8 @@ import java.util.Map;
 public class AuthorizationAdvice {
 
     @ModelAttribute
-    public AuthData getAuthData(@RequestAttribute Map<String, Object> tokenData) {
-        return new ObjectMapper().convertValue(tokenData, AuthData.class);
+    public AuthData getAuthData(@RequestAttribute Map<String, Object> authData) {
+        return new ObjectMapper().convertValue(authData, AuthData.class);
     }
 
 }

@@ -10,7 +10,7 @@ import com.akcl.dpms.svc_auth.contracts.AuthMessagingService;
 import com.akcl.dpms.svc_auth.contracts.SignupPersistenceService;
 import com.akcl.dpms.svc_auth.entity.LoginBase;
 import com.akcl.dpms.svc_auth.dto.AuthData;
-import com.akcl.dpms.svc_auth.dto.PasswordPair;
+import com.akcl.dpms.svc_auth.dto.Password;
 import com.akcl.dpms.svc_auth.dto.OtpRecipient;
 import com.akcl.dpms.svc_auth.dto.SignupCredential;
 import com.akcl.dpms.svc_auth.repository.LoginBaseRepository;
@@ -51,10 +51,10 @@ public class AuthController {
         String recipientAddress = Optional.ofNullable(otpRecipient.address).orElse("");
 
         try {
-            PasswordPair otp = passwordHelper.createPasswordPair(String.valueOf((long) Math.floor(Math.random() * 1000000)), recipientAddress);
-            authMessagingService.sendMessage("Verification Code: " + otp.password, recipientAddress, "Recipient Verification");
+            Password otp = passwordHelper.createPassword(String.valueOf((long) Math.floor(Math.random() * 1000000)), recipientAddress);
+            authMessagingService.sendMessage("Verification Code: " + otp.plainVal, recipientAddress, "Recipient Verification");
 
-            return ImmutableMap.of("token", jwtHelper.getDataToken(ImmutableMap.of("loginId", recipientAddress, "password", otp.passwordHash)));
+            return ImmutableMap.of("token", jwtHelper.tokenFromDataMap(ImmutableMap.of("loginId", recipientAddress, "password", otp.hashVal)));
         } catch (Exception e) {
             if (e instanceof MailParseException) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -73,22 +73,22 @@ public class AuthController {
             produces = {"application/json"}
     )
     public Object signup(@RequestBody SignupCredential signupCredential, @RequestBody Map<String, Object> signupData, @ModelAttribute AuthData authData) {
-        PasswordPair tempPasswordPair;
-        PasswordPair inputPasswordPair;
+        Password tempPassword;
+        Password inputPassword;
         String inputSalt = RandomStringUtils.randomAscii(8);
 
         try {
             String signupOtp = Optional.ofNullable(signupCredential.otp).orElseThrow(Exception::new);
-            tempPasswordPair = new PasswordPair(signupOtp, authData.password);
+            tempPassword = new Password(signupOtp, authData.password);
 
             String signupPassword = Optional.ofNullable(signupCredential.password).orElseThrow(Exception::new);
-            inputPasswordPair = passwordHelper.createPasswordPair(signupPassword, inputSalt);
+            inputPassword = passwordHelper.createPassword(signupPassword, inputSalt);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("invalid_credentials");
         }
 
         try {
-            passwordHelper.validatePasswordPair(tempPasswordPair, authData.loginId);
+            passwordHelper.validatePassword(tempPassword, authData.loginId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("invalid_credentials");
         }
@@ -96,7 +96,7 @@ public class AuthController {
         LoginBase login = new LoginBase();
         login.setLoginId(authData.loginId);
         login.setSalt(inputSalt);
-        login.setPassword(inputPasswordPair.passwordHash);
+        login.setPassword(inputPassword.hashVal);
 
         try {
             signupPersistenceService.handleSignup(signupData, new ObjectMapper().convertValue(login, new TypeReference<Map<String, Object>>() {}));
@@ -104,7 +104,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
 
-        return ImmutableMap.of("token", jwtHelper.getDataToken(ImmutableMap.of("loginId", login.getLoginId())));
+        return ImmutableMap.of("token", jwtHelper.tokenFromDataMap(ImmutableMap.of("loginId", login.getLoginId())));
     }
 
     @CrossOrigin(origins = "*")
@@ -121,11 +121,11 @@ public class AuthController {
         }
 
         try {
-            passwordHelper.validatePasswordPair(new PasswordPair(authData.password, login.getPassword()), login.getSalt());
+            passwordHelper.validatePassword(new Password(authData.password, login.getPassword()), login.getSalt());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("authorization_failed");
         }
 
-        return ImmutableMap.of("token", jwtHelper.getDataToken(ImmutableMap.of("loginId", login.getLoginId())));
+        return ImmutableMap.of("token", jwtHelper.tokenFromDataMap(ImmutableMap.of("loginId", login.getLoginId())));
     }
 }

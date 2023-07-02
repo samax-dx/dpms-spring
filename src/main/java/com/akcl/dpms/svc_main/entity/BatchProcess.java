@@ -3,37 +3,30 @@ package com.akcl.dpms.svc_main.entity;
 import com.akcl.dpms.util.AttributeCoder;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.PostConstruct;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 @Entity
@@ -42,8 +35,6 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "batchProcessId")
-//@Table(uniqueConstraints = { @UniqueConstraint(columnNames = {"process_id", "batch_id"}) })
 public class BatchProcess implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,33 +46,25 @@ public class BatchProcess implements Serializable {
 
     private boolean finished = false;
 
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(mappedBy = "batchProcess", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BatchProcessParameter> parameters = new ArrayList<>();
 
-    @JsonIgnoreProperties({"batchProcesses"})
-    @ManyToOne(fetch = FetchType.EAGER)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne
     @JoinColumn(name = "batch_id")
     private Batch batch;
 
-    @Transient
+    @Column(name = "batch_id", insertable = false, updatable = false)
     private String batchId;
 
-    @JsonIgnoreProperties({"batchProcesses"})
-    @ManyToOne(fetch = FetchType.EAGER)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne
     @JoinColumn(name = "machine_id")
     private Machine machine;
 
-    @Transient
+    @Column(name = "machine_id", insertable = false, updatable = false)
     private Long machineId;
-
-    @PostPersist
-    @PostUpdate
-    @PostLoad
-    public void updateReferenceIds() {
-        batchId = Optional.ofNullable(batch).map(Batch::getBatchId).orElse(null);
-        machineId = Optional.ofNullable(machine).map(Machine::getMachineId).orElse(null);
-    }
 
     @Transient
     @JsonIgnore

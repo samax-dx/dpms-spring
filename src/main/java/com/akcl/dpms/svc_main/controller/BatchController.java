@@ -40,8 +40,7 @@ public class BatchController {
             produces = {"application/json"}
     )
     public List<BatchView> getBatches(@RequestParam MultiValueMap<String, String> filters) {
-        //return batchRepository.findAllWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
-        return batchRepository.findAllViewsWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
+        return batchRepository.findAllWithPublishStatus(Optional.ofNullable(filters.get("isPublished")).map(v -> Boolean.valueOf(v.get(0))).orElse(false));
     }
 
     @CrossOrigin(origins = "*")
@@ -51,7 +50,7 @@ public class BatchController {
             consumes = {"application/json"},
             produces = {"application/json"}
     )
-    public Batch saveBatch(@RequestBody Batch batch) {
+    public BatchView saveBatch(@RequestBody Batch batch) {
         for (int i = 0, sz = batch.getBatchProcesses().size(); i < sz; ++i) {
             BatchProcess batchProcess = batch.getBatchProcesses().get(i);
             batchProcess.setProcessOrder(i);
@@ -59,8 +58,9 @@ public class BatchController {
             batchProcess.setMachine(machineRepository.findById(batchProcess.getMachineId()).orElse(null));
             batchProcess.getParameters().forEach(parameter -> parameter.setBatchProcess(batchProcess));
         }
+        batch = batchRepository.save(batch);
 
-        return batchRepository.save(batch);
+        return batchRepository.findOneWithId(batch.getBatchId()).orElse(null);
     }
 
     @CrossOrigin(origins = "*")

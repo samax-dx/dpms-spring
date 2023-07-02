@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PasswordPair {
-    public String password;
-    public String passwordHash;
+public class Password {
+    public String plainVal;
+    public String hashVal;
 }

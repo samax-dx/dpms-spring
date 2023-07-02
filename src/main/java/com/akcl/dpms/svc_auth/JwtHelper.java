@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class JwtHelper {
     private final String jwtSecret;
 
-    public Map<String, String> getTokenData(String token) {
+    public Map<String, String> tokenToDataMap(String token) {
         try {
             DecodedJWT decodedJWT = JWT.decode(token);
             Algorithm.HMAC256(jwtSecret).verify(decodedJWT);
@@ -37,10 +37,10 @@ public class JwtHelper {
         }
     }
 
-    public String getDataToken(Map<String, String> tokenData) {
+    public String tokenFromDataMap(Map<String, String> dataMap) {
         JWTCreator.Builder jwtBuilder = JWT.create();
 
-        for (Map.Entry<String, String> tokenEntry: tokenData.entrySet()) {
+        for (Map.Entry<String, String> tokenEntry: dataMap.entrySet()) {
             jwtBuilder = jwtBuilder.withClaim(tokenEntry.getKey(), tokenEntry.getValue());
         }
         jwtBuilder = jwtBuilder.withExpiresAt(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));

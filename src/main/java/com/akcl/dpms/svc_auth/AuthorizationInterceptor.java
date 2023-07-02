@@ -18,9 +18,9 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         String[] headerParts = (authHeader == null ? "" : authHeader).trim().split(" ");
 
         if (headerParts.length == 2) {
-            request.setAttribute("tokenData", jwtHelper.getTokenData(headerParts[1]));
+            request.setAttribute("authData", jwtHelper.tokenToDataMap(headerParts[1]));
         } else {
-            request.setAttribute("tokenData", new HashMap<>());
+            request.setAttribute("authData", new HashMap<>());
         }
 
         return true;

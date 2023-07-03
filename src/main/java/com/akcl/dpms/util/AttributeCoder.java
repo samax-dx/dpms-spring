@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 
 public class AttributeCoder<T> {
@@ -48,19 +49,22 @@ public class AttributeCoder<T> {
     }
 
     public void insertAttribute(String attrName, Object value, List<T> dest) {
-        Map<String, Object> attrFields = attributeStore.computeIfAbsent(attrName, k -> new HashMap<>());
+        Map<String, Object> attrFieldsNew = new HashMap<>();
 
         if (attrName.endsWith("__rid")) {
-            attrFields.put(ridField, Optional.ofNullable(value).map(v -> Long.valueOf("" + v)).orElse(null));
+            attrFieldsNew.put(ridField, Optional.ofNullable(value).map(v -> Long.valueOf("" + v)).orElse(null));
             attrName = attrName.replace("__rid", "");
         } else if (attrName.endsWith("__sid")) {
-            attrFields.put(sidField, value);
+            attrFieldsNew.put(sidField, value);
             attrName = attrName.replace("__sid", "");
         } else {
-            attrFields.put(nameField, attrName);
-            attrFields.put(valueField, value);
+            attrFieldsNew.put(nameField, attrName);
+            attrFieldsNew.put(valueField, value);
             attrName = attrName.concat("");
         }
+
+        Map<String, Object> attrFields = attributeStore.computeIfAbsent(attrName, k -> new HashMap<>());
+        attrFields.putAll(attrFieldsNew);
 
         int attributeIndex = attributeIndexMap.computeIfAbsent(attrName, k -> dest.size());
         T attribute = new ObjectMapper().convertValue(attrFields, attributeType);

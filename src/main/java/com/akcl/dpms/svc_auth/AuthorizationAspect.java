@@ -11,6 +11,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -23,14 +25,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthorizationAspect {
 
-    private final HttpServletRequest httpServletRequest;
-
     private final LoginBaseRepository loginBaseRepository;
 
     @Around(value = "@annotation(authorizeAnnotation)")
     public Object authorize(ProceedingJoinPoint joinPoint, Authorize authorizeAnnotation) {
         try {
-            Map<String, String> user = new ObjectMapper().convertValue(Optional.ofNullable(httpServletRequest.getAttribute("authData")).orElse(new HashMap<>()),
+            HttpServletRequest currentRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            Map<String, String> user = new ObjectMapper().convertValue(Optional.ofNullable(currentRequest.getAttribute("authData")).orElse(new HashMap<>()),
                     new TypeReference<Map<String, String>>() {});
 
             boolean authChecks;

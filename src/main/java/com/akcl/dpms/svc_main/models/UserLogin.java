@@ -1,4 +1,4 @@
-package com.akcl.dpms.svc_main.dto;
+package com.akcl.dpms.svc_main.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

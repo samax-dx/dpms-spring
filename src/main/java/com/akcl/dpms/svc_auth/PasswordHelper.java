@@ -1,6 +1,6 @@
 package com.akcl.dpms.svc_auth;
 
-import com.akcl.dpms.svc_auth.dto.Password;
+import com.akcl.dpms.svc_auth.models.Password;
 import lombok.RequiredArgsConstructor;
 
 import javax.crypto.Mac;

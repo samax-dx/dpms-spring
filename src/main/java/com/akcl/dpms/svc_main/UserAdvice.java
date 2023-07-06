@@ -1,9 +1,9 @@
 package com.akcl.dpms.svc_main;
 
-import com.akcl.dpms.svc_main.dto.UserLogin;
+import com.akcl.dpms.svc_main.models.UserLogin;
 import com.akcl.dpms.svc_main.entity.User;
 import com.akcl.dpms.svc_main.repository.UserLoginRepository;
-import com.akcl.dpms.svc_auth.dto.AuthData;
+import com.akcl.dpms.svc_auth.models.AuthData;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import lombok.RequiredArgsConstructor;

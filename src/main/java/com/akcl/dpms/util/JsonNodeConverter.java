@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 import java.util.Optional;
 
 
+@Converter
 public class JsonNodeConverter implements AttributeConverter<JsonNode, String>
 {
     @Override

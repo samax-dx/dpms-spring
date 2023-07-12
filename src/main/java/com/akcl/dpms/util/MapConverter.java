@@ -1,37 +1,31 @@
 package com.akcl.dpms.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.util.Optional;
+import java.util.Map;
 
 
 @Converter
-public class JsonNodeConverter implements AttributeConverter<JsonNode, String>
-{
+public class MapConverter implements AttributeConverter<Map<String, Object>, String> {
     @Override
-    public String convertToDatabaseColumn(JsonNode jsonNode)
-    {
-        if( jsonNode == null) {
+    public String convertToDatabaseColumn(Map<String, Object> value) {
+        try {
+            return new ObjectMapper().writeValueAsString(value);
+        } catch (JsonProcessingException e) {
             return null;
         }
-
-        return jsonNode.toPrettyString();
     }
 
     @Override
-    public JsonNode convertToEntityAttribute(String jsonNodeString) {
-        if (Optional.ofNullable(jsonNodeString).map(v -> v.trim().length() > 0).orElse(false)) {
-            return null;
-        }
-
+    public Map<String, Object> convertToEntityAttribute(String value) {
         try {
-            return new ObjectMapper().readTree(jsonNodeString);
+            return new ObjectMapper().readValue(value, new TypeReference<Map<String, Object>>() {});
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 }

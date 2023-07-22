@@ -10,7 +10,7 @@ public class ObjectCloner<T> {
         this.originalObject = cloneSource;
     }
 
-    T cloneObject(Class<T> tClass) throws JsonProcessingException {
+    public T cloneObject(Class<T> tClass) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(objectMapper.writeValueAsString(originalObject), tClass);
     }

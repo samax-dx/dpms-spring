@@ -66,6 +66,9 @@ public class BatchProcess implements Serializable {
     @Column(name = "machine_id", insertable = false, updatable = false)
     private Long machineId;
 
+    @OneToMany(mappedBy = "batchProcess", cascade = CascadeType.ALL)
+    private List<ProcessExecution> processExecutions;
+
     @Transient
     @JsonIgnore
     @Getter(AccessLevel.NONE)

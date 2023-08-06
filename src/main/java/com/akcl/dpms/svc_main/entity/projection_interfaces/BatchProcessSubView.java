@@ -1,5 +1,6 @@
 package com.akcl.dpms.svc_main.entity.projection_interfaces;
 
+import com.akcl.dpms.svc_main.entity.ProcessExecution;
 import com.akcl.dpms.util.AttributeCoder;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,6 +21,10 @@ public interface BatchProcessSubView {
 
     @JsonIgnore
     List<BatchProcessParameterSubView> getParameters();
+
+    List<ProcessExecution> getExecutions();
+
+    ProcessExecution getActiveExecution();
 
     MachineSubView getMachine();
 

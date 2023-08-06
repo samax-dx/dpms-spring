@@ -3,11 +3,13 @@ package com.akcl.dpms.svc_main.controller;
 import com.akcl.dpms.svc_main.entity.Batch;
 import com.akcl.dpms.svc_main.entity.BatchExecutionOrder;
 import com.akcl.dpms.svc_main.entity.BatchProcess;
+import com.akcl.dpms.svc_main.entity.ProcessExecution;
 import com.akcl.dpms.svc_main.entity.projection_interfaces.BatchView;
 import com.akcl.dpms.svc_main.repository.BatchExecutionOrderRepository;
 import com.akcl.dpms.svc_main.repository.BatchProcessRepository;
 import com.akcl.dpms.svc_main.repository.BatchRepository;
 import com.akcl.dpms.svc_main.repository.MachineRepository;
+import com.akcl.dpms.svc_main.repository.ProcessExecutionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ public class BatchController {
     private final BatchRepository batchRepository;
     private final BatchProcessRepository batchProcessRepository;
     private final BatchExecutionOrderRepository executionOrderRepository;
+    private final ProcessExecutionRepository processExecutionRepository;
     private final MachineRepository machineRepository;
 
     @CrossOrigin(origins = "*")
@@ -92,6 +96,65 @@ public class BatchController {
 
     @CrossOrigin(origins = "*")
     @RequestMapping(
+            value = "/startBatchProcess",
+            method = RequestMethod.POST,
+            consumes = {"application/json"},
+            produces = {"application/json"}
+    )
+    public BatchProcess startBatchProcess(@RequestBody BatchProcess batchProcessPartial) {
+        BatchProcess batchProcess = batchProcessRepository.findById(batchProcessPartial.getBatchProcessId()).orElseThrow(RuntimeException::new);
+
+        ProcessExecution processExecution = new ProcessExecution();
+        processExecution.setBatchProcess(batchProcess);
+        processExecution.setStartedOn(LocalDateTime.now());
+        processExecutionRepository.save(processExecution);
+
+        batchProcess.setActiveExecution(processExecution);
+        return batchProcessRepository.save(batchProcess);
+    }
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(
+            value = "/stopBatchProcess",
+            method = RequestMethod.POST,
+            consumes = {"application/json"},
+            produces = {"application/json"}
+    )
+    public BatchProcess stopBatchProcess(@RequestBody BatchProcess batchProcessPartial) {
+        BatchProcess batchProcess = batchProcessRepository.findById(batchProcessPartial.getBatchProcessId()).orElseThrow(RuntimeException::new);
+
+        ProcessExecution processExecution = batchProcess.getActiveExecution();
+        processExecution.setEndedOn(LocalDateTime.now());
+        processExecutionRepository.save(processExecution);
+
+        return batchProcess;
+    }
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(
+            value = "/startNextBatchProcess",
+            method = RequestMethod.POST,
+            consumes = {"application/json"},
+            produces = {"application/json"}
+    )
+    public BatchProcess startNextBatchProcess(@RequestBody BatchProcessInfo batchProcessInfo) {
+        BatchProcess currentProcess = batchProcessRepository.findById(batchProcessInfo.currentProcessId).orElseThrow(RuntimeException::new);
+        currentProcess.setFinished(true);
+        batchProcessRepository.save(currentProcess);
+
+        BatchProcess nextProcess = batchProcessRepository.findById(batchProcessInfo.nextProcessId).orElseThrow(RuntimeException::new);
+
+        ProcessExecution processExecution = new ProcessExecution();
+        processExecution.setBatchProcess(nextProcess);
+        processExecution.setStartedOn(LocalDateTime.now());
+        processExecutionRepository.save(processExecution);
+
+        nextProcess.setActiveExecution(processExecution);
+        return batchProcessRepository.save(nextProcess);
+    }
+
+    @CrossOrigin(origins = "*")
+    @RequestMapping(
             value = "/getProcesses",
             method = RequestMethod.GET,
             produces = {"application/json"}
@@ -114,5 +177,10 @@ public class BatchController {
         executionOrder.setBatch(batchRepository.getReferenceById(batchId.asText()));
 
         return executionOrderRepository.save(executionOrder);
+    }
+
+    public static class BatchProcessInfo {
+        public Long currentProcessId;
+        public Long nextProcessId;
     }
 }

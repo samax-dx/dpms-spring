@@ -21,6 +21,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -66,8 +67,11 @@ public class BatchProcess implements Serializable {
     @Column(name = "machine_id", insertable = false, updatable = false)
     private Long machineId;
 
-    @OneToMany(mappedBy = "batchProcess", cascade = CascadeType.ALL)
-    private List<ProcessExecution> processExecutions;
+    @OneToMany(mappedBy = "batchProcess", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProcessExecution> executions = new ArrayList<>();
+
+    @OneToOne
+    private ProcessExecution activeExecution;
 
     @Transient
     @JsonIgnore
